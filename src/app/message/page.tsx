@@ -30,6 +30,7 @@ export default function MessagePage() {
   const [loading, setLoading] = useState(true);
   const [text, setText] = useState("");
   const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [deletingChat, setDeletingChat] = useState(false);
 
   useEffect(() => {
     let mounted = true;
@@ -96,14 +97,50 @@ export default function MessagePage() {
         return [...prev, incoming];
       });
     };
+    const onChatCleared = () => {
+      setMessages([]);
+    };
 
     channel.subscribe("message.created", onMessage);
+    channel.subscribe("chat.cleared", onChatCleared);
 
     return () => {
-      channel.unsubscribe("message.created", onMessage);
-      realtimeClient.close();
+      try {
+        channel.unsubscribe("message.created", onMessage);
+        channel.unsubscribe("chat.cleared", onChatCleared);
+        if (realtimeClient.connection.state !== "closed") {
+          realtimeClient.close();
+        }
+      } catch (error) {
+        console.warn("Ably cleanup error:", error);
+      }
     };
   }, [user]);
+
+  const handleDeleteChat = async () => {
+    if (deletingChat) {
+      return;
+    }
+    if (messages.length === 0) {
+      return;
+    }
+    const confirmed = window.confirm(
+      "Энэ чатын бүх мессежийг устгах уу?",
+    );
+    if (!confirmed) {
+      return;
+    }
+
+    setDeletingChat(true);
+    try {
+      await apiFetch<{ ok: boolean }>("/chats/messages", { method: "DELETE" });
+      setMessages([]);
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setDeletingChat(false);
+    }
+  };
 
   const handleSend = async () => {
     const value = text.trim();
@@ -159,7 +196,11 @@ export default function MessagePage() {
   return (
     <main className="h-full w-full bg-[radial-gradient(circle_at_top,_#e0f2fe,_#f8fafc_55%)] px-4 py-6">
       <section className="grid h-screen w-full gap-4 md:grid-cols-[360px_minmax(0,1fr)]">
-        <Sidebar />
+        <Sidebar
+          messageCount={messages.length}
+          deleting={deletingChat}
+          onDeleteChat={handleDeleteChat}
+        />
 
         <article className="flex h-screen w-full flex-col rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
           <div className="flex items-start justify-between border-b border-slate-200 pb-4">

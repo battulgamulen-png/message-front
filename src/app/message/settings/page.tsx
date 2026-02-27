@@ -75,8 +75,12 @@ export default function MessageSettingsPage() {
     return (
       <main className="h-screen w-full grid place-items-center px-4 bg-slate-50">
         <section className="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-6 text-center shadow-sm">
-          <h1 className="text-2xl font-bold text-slate-900">Нэвтрэлт шаардлагатай</h1>
-          <p className="mt-2 text-sm text-slate-600">Энэ хуудсыг үзэхийн тулд эхлээд нэвтэрнэ үү.</p>
+          <h1 className="text-2xl font-bold text-slate-900">
+            Нэвтрэлт шаардлагатай
+          </h1>
+          <p className="mt-2 text-sm text-slate-600">
+            Энэ хуудсыг үзэхийн тулд эхлээд нэвтэрнэ үү.
+          </p>
           <button
             onClick={() => router.push("/login")}
             className="mt-4 w-full rounded-lg bg-green-600 px-4 py-3 text-white transition hover:bg-green-700"
@@ -89,10 +93,14 @@ export default function MessageSettingsPage() {
   }
 
   return (
-    <main className="h-screen w-full bg-[radial-gradient(circle_at_top,_#e0f2fe,_#f8fafc_55%)] px-4 py-6">
+    <main className="h-full w-full bg-[radial-gradient(circle_at_top,_#e0f2fe,_#f8fafc_55%)] px-4 py-6">
       <section className="grid h-screen w-full gap-4 md:grid-cols-[360px_minmax(0,1fr)]">
-        <Sidebar />
-        <Settings user={user} onSignOut={handleSignOut} onSaveProfile={handleSaveProfile} />
+        <Sidebar messageCount={0} deleting={false} onDeleteChat={() => {}} />
+        <Settings
+          user={user}
+          onSignOut={handleSignOut}
+          onSaveProfile={handleSaveProfile}
+        />
       </section>
     </main>
   );

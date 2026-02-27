@@ -42,14 +42,22 @@ export function clearAuthToken(): void {
 export async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> {
   const token = getAuthToken();
 
-  const response = await fetch(`${API_BASE_URL}${path}`, {
-    ...init,
-    headers: {
-      "Content-Type": "application/json",
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      ...(init?.headers || {}),
-    },
-  });
+  let response: Response;
+  try {
+    response = await fetch(`${API_BASE_URL}${path}`, {
+      ...init,
+      headers: {
+        "Content-Type": "application/json",
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        ...(init?.headers || {}),
+      },
+    });
+  } catch {
+    throw new ApiError(
+      `Network error: API reachable bish байна (${API_BASE_URL}). Backend server-ээ шалгана уу.`,
+      0,
+    );
+  }
 
   const contentType = response.headers.get("content-type") || "";
   const isJson = contentType.includes("application/json");

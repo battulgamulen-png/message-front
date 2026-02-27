@@ -32,7 +32,17 @@ function initials(name: string): string {
     .toUpperCase();
 }
 
-export default function Sidebar() {
+type SidebarProps = {
+  messageCount: number;
+  deleting: boolean;
+  onDeleteChat: () => void;
+};
+
+export default function Sidebar({
+  messageCount,
+  deleting,
+  onDeleteChat,
+}: SidebarProps) {
   const router = useRouter();
 
   return (
@@ -44,6 +54,7 @@ export default function Sidebar() {
         <div className="flex items-center justify-center gap-1.5">
           <button
             type="button"
+            onClick={() => router.push("/message/addchat")}
             className="grid h-9 w-9 place-items-center rounded-full bg-sky-500 text-lg font-semibold text-white transition hover:bg-sky-600"
             aria-label="New chat"
           >
@@ -81,9 +92,8 @@ export default function Sidebar() {
 
       <div className="space-y-1">
         {conversations.map((chat) => (
-          <button
+          <div
             key={chat.id}
-            type="button"
             className={[
               "flex w-full items-center gap-3 rounded-2xl px-3 py-2.5 text-left transition",
               chat.active ? "bg-sky-500 text-white" : "hover:bg-slate-100",
@@ -147,7 +157,33 @@ export default function Sidebar() {
                 ) : null}
               </div>
             </div>
-          </button>
+            <button
+              type="button"
+              onClick={onDeleteChat}
+              disabled={deleting || messageCount === 0}
+              className={[
+                "grid h-8 w-8 shrink-0 place-items-center rounded-lg transition",
+                chat.active
+                  ? "bg-white/15 text-white hover:bg-white/25 disabled:bg-white/10 disabled:text-sky-100"
+                  : "bg-slate-200 text-slate-600 hover:bg-slate-300 disabled:text-slate-400",
+              ].join(" ")}
+              aria-label="Delete chat"
+              title="Chat ustgah"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                fill="currentColor"
+                className="h-4 w-4"
+              >
+                <path
+                  fillRule="evenodd"
+                  d="M16.5 4.478V4.25A2.25 2.25 0 0 0 14.25 2h-4.5A2.25 2.25 0 0 0 7.5 4.25v.228c-.597.034-1.192.083-1.784.145a.75.75 0 1 0 .156 1.492l.329-.034.401 12.03A2.25 2.25 0 0 0 8.85 20.25h6.3a2.25 2.25 0 0 0 2.247-2.139l.401-12.03.329.034a.75.75 0 1 0 .156-1.492a48.108 48.108 0 0 0-1.783-.145ZM12 17.25a.75.75 0 0 1-.75-.75v-6a.75.75 0 0 1 1.5 0v6a.75.75 0 0 1-.75.75ZM9.75 16.5a.75.75 0 0 0 1.5 0v-6a.75.75 0 0 0-1.5 0v6ZM14.25 16.5a.75.75 0 0 0 1.5 0v-6a.75.75 0 0 0-1.5 0v6ZM9 4.25c0-.414.336-.75.75-.75h4.5c.414 0 .75.336.75.75v.133a48.11 48.11 0 0 0-6 0V4.25Z"
+                  clipRule="evenodd"
+                />
+              </svg>
+            </button>
+          </div>
         ))}
       </div>
     </aside>
