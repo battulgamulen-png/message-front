@@ -2,7 +2,9 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { apiFetch, ApiError } from "@/lib/api";
+import { createClient } from "../../../utils/supabase/client";
+
+const supabase = createClient();
 
 export default function SignUpPage() {
   const router = useRouter();
@@ -11,6 +13,8 @@ export default function SignUpPage() {
   const [fullName, setFullName] = useState("");
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -37,18 +41,24 @@ export default function SignUpPage() {
 
     try {
       setLoading(true);
-      await apiFetch("/auth/signup", {
-        method: "POST",
-        body: JSON.stringify({ fullName, email, password }),
+      const { error: signUpError } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            full_name: fullName,
+          },
+        },
       });
+
+      if (signUpError) {
+        throw new Error(signUpError.message);
+      }
 
       router.push("/login");
     } catch (err) {
-      if (err instanceof ApiError) {
-        setError(err.message);
-      } else {
-        setError("Сервертэй холбогдож чадсангүй.");
-      }
+      const message = err instanceof Error ? err.message : "Бүртгэх үед алдаа гарлаа.";
+      setError(message);
     } finally {
       setLoading(false);
     }
@@ -69,7 +79,6 @@ export default function SignUpPage() {
                 {error}
               </div>
             )}
-
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Full Name
@@ -101,14 +110,23 @@ export default function SignUpPage() {
               <label className="block text-sm font-medium text-gray-700 mb-1">
               Password
               </label>
-              <input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="at least 8 digit"
-                className="w-full rounded-lg border border-gray-300 text-black px-4 py-3 outline-none focus:border-green-500 focus:ring-2 focus:ring-green-100 transition"
-                required
-              />
+              <div className="relative">
+                <input
+                  type={showPassword ? "text" : "password"}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="at least 8 digit"
+                  className="w-full rounded-lg border border-gray-300 text-black px-4 pr-20 py-3 outline-none focus:border-green-500 focus:ring-2 focus:ring-green-100 transition"
+                  required
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((prev) => !prev)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-green-700 hover:underline"
+                >
+                  {showPassword ? "Hide" : "Show"}
+                </button>
+              </div>
               <p className="text-xs text-gray-400 mt-1">
                 Good password: 8+ characters, including lowercase/uppercase letters and numbers.
               </p>
@@ -118,14 +136,23 @@ export default function SignUpPage() {
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Confirm passwords
               </label>
-              <input
-                type="password"
-                value={confirm}
-                onChange={(e) => setConfirm(e.target.value)}
-                placeholder="Confirm password"
-                className="w-full rounded-lg border border-gray-300 text-black px-4 py-3 outline-none focus:border-green-500 focus:ring-2 focus:ring-green-100 transition"
-                required
-              />
+              <div className="relative">
+                <input
+                  type={showConfirmPassword ? "text" : "password"}
+                  value={confirm}
+                  onChange={(e) => setConfirm(e.target.value)}
+                  placeholder="Confirm password"
+                  className="w-full rounded-lg border border-gray-300 text-black px-4 pr-20 py-3 outline-none focus:border-green-500 focus:ring-2 focus:ring-green-100 transition"
+                  required
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmPassword((prev) => !prev)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-green-700 hover:underline"
+                >
+                  {showConfirmPassword ? "Hide" : "Show"}
+                </button>
+              </div>
             </div>
 
             <button

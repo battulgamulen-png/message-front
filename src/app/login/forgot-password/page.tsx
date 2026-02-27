@@ -2,7 +2,9 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { apiFetch, ApiError } from "@/lib/api";
+import { createClient } from "../../../../utils/supabase/client";
+
+const supabase = createClient();
 
 export default function ForgotPasswordPage() {
   const router = useRouter();
@@ -22,18 +24,22 @@ export default function ForgotPasswordPage() {
 
     try {
       setLoading(true);
-      await apiFetch("/auth/forgot-password", {
-        method: "POST",
-        body: JSON.stringify({ email }),
-      });
+      const { error: resetError } = await supabase.auth.resetPasswordForEmail(
+        email,
+        {
+          redirectTo: `${window.location.origin}/login`,
+        },
+      );
+
+      if (resetError) {
+        throw new Error(resetError.message);
+      }
 
       setSent(true);
     } catch (err) {
-      if (err instanceof ApiError) {
-        setError(err.message);
-      } else {
-        setError("Сервертэй холбогдож чадсангүй.");
-      }
+      const message =
+        err instanceof Error ? err.message : "Сэргээх үед алдаа гарлаа.";
+      setError(message);
     } finally {
       setLoading(false);
     }
@@ -43,8 +49,12 @@ export default function ForgotPasswordPage() {
     <div className="min-h-screen bg-white flex items-center justify-center px-4">
       <div className="w-full max-w-md">
         <div className="mb-8 text-center">
-          <h1 className="text-2xl font-bold text-gray-900">Reset your password</h1>
-          <p className="text-gray-500 mt-1">We send your new passwrod to mail</p>
+          <h1 className="text-2xl font-bold text-gray-900">
+            Reset your password
+          </h1>
+          <p className="text-gray-500 mt-1">
+            We send your new passwrod to mail
+          </p>
         </div>
 
         <div className="border border-gray-200 rounded-2xl shadow-sm p-8">
@@ -70,14 +80,14 @@ export default function ForgotPasswordPage() {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                Mail
+                  Mail
                 </label>
                 <input
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="name@example.com"
-                  className="w-full rounded-lg border border-gray-300 px-4 py-3 outline-none focus:border-green-500 focus:ring-2 focus:ring-green-100 transition"
+                  className="w-full rounded-lg border border-gray-300 text-black px-4 py-3 outline-none focus:border-green-500 focus:ring-2 focus:ring-green-100 transition"
                   required
                 />
               </div>
@@ -96,7 +106,7 @@ export default function ForgotPasswordPage() {
                   onClick={() => router.push("/login")}
                   className="text-sm text-gray-600 hover:underline"
                 >
-                 Back to login
+                  Back to login
                 </button>
               </div>
             </form>

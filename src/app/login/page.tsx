@@ -2,12 +2,15 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { apiFetch, ApiError } from "@/lib/api";
+import { createClient } from "../../../utils/supabase/client";
+
+const supabase = createClient();
 
 export default function LoginPage() {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -22,22 +25,20 @@ export default function LoginPage() {
 
     try {
       setLoading(true);
-      const data = await apiFetch<{ token?: string }>("/auth/login", {
-        method: "POST",
-        body: JSON.stringify({ email, password }),
+      const { error: signInError } = await supabase.auth.signInWithPassword({
+        email,
+        password,
       });
 
-      if (data.token) {
-        localStorage.setItem("accessToken", data.token);
+      if (signInError) {
+        throw new Error(signInError.message);
       }
 
-      router.push("/");
+      router.push("/message");
     } catch (err) {
-      if (err instanceof ApiError) {
-        setError(err.message);
-      } else {
-        setError("Сервертэй холбогдож чадсангүй.");
-      }
+      const message =
+        err instanceof Error ? err.message : "Нэвтрэх үед алдаа гарлаа.";
+      setError(message);
     } finally {
       setLoading(false);
     }
@@ -47,7 +48,9 @@ export default function LoginPage() {
     <div className="min-h-screen bg-white flex items-center justify-center px-4">
       <div className="w-full max-w-md">
         <div className="mb-8 text-center">
-          <h1 className="text-3xl font-bold text-gray-900">Welcome to Message</h1>
+          <h1 className="text-3xl font-bold text-gray-900">
+            Welcome to Message
+          </h1>
           <p className="text-gray-500 mt-1">use your mail</p>
         </div>
 
@@ -61,30 +64,39 @@ export default function LoginPage() {
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-               Mail
+                Mail
               </label>
               <input
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="name@example.com"
-                className="w-full rounded-lg border border-gray-300 px-4 py-3 outline-none focus:border-green-500 focus:ring-2 focus:ring-green-100 transition"
+                className="w-full rounded-lg border border-gray-300  text-black px-4 py-3 outline-none focus:border-green-500 focus:ring-2 focus:ring-green-100 transition"
                 required
               />
             </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-              Password
+                Password
               </label>
-              <input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="••••••••"
-                className="w-full rounded-lg border border-gray-300 px-4 py-3 outline-none focus:border-green-500 focus:ring-2 focus:ring-green-100 transition"
-                required
-              />
+              <div className="relative">
+                <input
+                  type={showPassword ? "text" : "password"}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="••••••••"
+                  className="w-full rounded-lg border border-gray-300 px-4 pr-20 text-black py-3 outline-none focus:border-green-500 focus:ring-2 focus:ring-green-100 transition"
+                  required
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((prev) => !prev)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-green-700 hover:underline"
+                >
+                  {showPassword ? "Hide" : "Show"}
+                </button>
+              </div>
             </div>
 
             <div className="flex justify-between items-center">
@@ -94,7 +106,7 @@ export default function LoginPage() {
                 onClick={() => router.push("/login/forgot-password")}
                 className="text-sm text-green-600 hover:underline"
               >
-               forgot password?
+                forgot password?
               </button>
             </div>
 
