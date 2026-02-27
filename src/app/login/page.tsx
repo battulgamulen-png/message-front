@@ -2,9 +2,16 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { createClient } from "../../../utils/supabase/client";
+import { apiFetch, setAuthToken } from "../../lib/api";
 
-const supabase = createClient();
+type AuthResponse = {
+  user: {
+    id: string;
+    email: string;
+    fullName: string | null;
+  };
+  token: string;
+};
 
 export default function LoginPage() {
   const router = useRouter();
@@ -25,15 +32,12 @@ export default function LoginPage() {
 
     try {
       setLoading(true);
-      const { error: signInError } = await supabase.auth.signInWithPassword({
-        email,
-        password,
+      const data = await apiFetch<AuthResponse>("/auth/login", {
+        method: "POST",
+        body: JSON.stringify({ email, password }),
       });
 
-      if (signInError) {
-        throw new Error(signInError.message);
-      }
-
+      setAuthToken(data.token);
       router.push("/message");
     } catch (err) {
       const message =

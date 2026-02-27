@@ -1,20 +1,17 @@
-
-
 import Link from "next/link";
 
 const authLinks = [
   { href: "/login", label: "Login", detail: "Sign in with your account" },
   { href: "/signup", label: "Signup", detail: "Create a new account" },
- 
 ];
 
 export default function Home() {
   return (
-    <main className="min-h-screen bg-gradient-to-br from-slate-100 via-white to-cyan-100 p-6 text-slate-900 md:p-10">
+    <main className="h-screen bg-gradient-to-br from-slate-100 via-white to-cyan-100 p-6 text-slate-900 md:p-10">
       <div className="mx-auto flex min-h-[calc(100vh-3rem)] w-full max-w-5xl items-center justify-center">
         <section className="w-full rounded-3xl border border-slate-200/80 bg-white/75 p-8 shadow-xl backdrop-blur md:p-12">
           <p className="mb-3 text-xs font-semibold uppercase tracking-[0.22em] text-cyan-700">
-           Real time messages
+            Real time messages
           </p>
           <h1 className="text-3xl font-bold leading-tight md:text-5xl">
             Welcome

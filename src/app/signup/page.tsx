@@ -2,9 +2,16 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { createClient } from "../../../utils/supabase/client";
+import { apiFetch, setAuthToken } from "../../lib/api";
 
-const supabase = createClient();
+type AuthResponse = {
+  user: {
+    id: string;
+    email: string;
+    fullName: string | null;
+  };
+  token: string;
+};
 
 export default function SignUpPage() {
   const router = useRouter();
@@ -21,7 +28,6 @@ export default function SignUpPage() {
   const validate = () => {
     if (!fullName.trim()) return "Нэрээ оруулна уу.";
     if (!email.trim()) return "Имэйл оруулна уу.";
-    // Энгийн имэйл шалгалт
     const re = /\S+@\S+\.\S+/;
     if (!re.test(email)) return "Зөв имэйл хаяг оруулна уу.";
     if (password.length < 8) return "Нууц үг дор хаяж 8 тэмдэгт байх ёстой.";
@@ -41,21 +47,17 @@ export default function SignUpPage() {
 
     try {
       setLoading(true);
-      const { error: signUpError } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          data: {
-            full_name: fullName,
-          },
-        },
+      const data = await apiFetch<AuthResponse>("/auth/signup", {
+        method: "POST",
+        body: JSON.stringify({
+          email,
+          fullName,
+          password,
+        }),
       });
 
-      if (signUpError) {
-        throw new Error(signUpError.message);
-      }
-
-      router.push("/login");
+      setAuthToken(data.token);
+      router.push("/message");
     } catch (err) {
       const message = err instanceof Error ? err.message : "Бүртгэх үед алдаа гарлаа.";
       setError(message);
@@ -75,14 +77,10 @@ export default function SignUpPage() {
         <div className="border border-gray-200 rounded-2xl shadow-sm p-8">
           <form onSubmit={handleRegister} className="space-y-5">
             {error && (
-              <div className="text-sm text-red-600 bg-red-50 p-3 rounded-md">
-                {error}
-              </div>
+              <div className="text-sm text-red-600 bg-red-50 p-3 rounded-md">{error}</div>
             )}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Full Name
-              </label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
               <input
                 value={fullName}
                 onChange={(e) => setFullName(e.target.value)}
@@ -93,9 +91,7 @@ export default function SignUpPage() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-              Mail
-              </label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Mail</label>
               <input
                 type="email"
                 value={email}
@@ -107,9 +103,7 @@ export default function SignUpPage() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-              Password
-              </label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
               <div className="relative">
                 <input
                   type={showPassword ? "text" : "password"}
@@ -133,9 +127,7 @@ export default function SignUpPage() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Confirm passwords
-              </label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Confirm passwords</label>
               <div className="relative">
                 <input
                   type={showConfirmPassword ? "text" : "password"}
